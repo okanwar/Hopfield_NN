@@ -73,7 +73,7 @@ import java.io.*;
         int i = (int) x;
         return (float) i;
     }
-    public float compute(int index) {
+    public int compute(Pattern pattern, int index) {
         float temp = 0.0f;
         for (int j = 0; j < numInputs; j++) {
             temp += weights[index][j] * inputCells[j];
@@ -81,10 +81,10 @@ import java.io.*;
         int y = temp + tempStorage[index];
 
         if(y > 0.0f) {
-            inputCells[i] = 1.0f;
+            return 1;
         } else if (inputCells[i] == 0) {
-            return tempStorage[index];
-        } else {inputCells[i] = -1.0f;}
+            return pattern.valueAt(index);
+        } else {return -1;}
     }
 
     public float[] deploy(float[] pattern, int numIterations) {
@@ -105,7 +105,7 @@ import java.io.*;
         for (int i = 0; i < testingData.getNumberOfPatterns(); i++) {
             inputCells[i] = testingData.getPattern(i);
             for(int j = 0; j < testingData.getPatternSize(); j++){
-                    testingData.getPattern(i).setPatternIndex(sequence[j], compute(j));
+                    testingData.getPattern(i).setPatternIndex(sequence[j], compute(testingData.getPattern(i),j));
             }
         }
         return inputCells;
