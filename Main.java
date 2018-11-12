@@ -18,16 +18,17 @@ public class Main {
 		if (args.length == 0) {
 			while(!quit) {
 				// Run by prompts
-				String mainPrompt = "---- Welcome to the perceptron net ----\n" + "(1) Train a new perceptron net\n"
-						+ "(2) Train a net from file\n";
+   				String mainPrompt = "---- Welcome to the Hopfield Nnet ----\n" +
+                        "(1) Train a new Hopeifld Net\n"
+						+ "(2) Testing\n";
 
 				// Get mode
 				Scanner input = new Scanner(System.in);
 				System.out.println(mainPrompt);
 				int mode = input.nextInt();
 
-				PerceptronSettings perceptronSettings = new PerceptronSettings();
-				Perceptron p1 = new Perceptron(perceptronSettings, false);
+				Hopfield hopfieldObject = new Hopfield();
+                Hopfield h1 = new Hopfield(hopfieldObject, false);
 
 				if (mode == 1) {
 					// New net from scratch
