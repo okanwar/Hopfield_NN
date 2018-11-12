@@ -100,15 +100,30 @@ import java.io.*;
         testingData.setWeightsFromFile(weightsFile);
         weights = testingData.getWeights();
 
-        int [] sequence;
+        int [] sequence = generateRandomSequence(testingData.getPatternSize());
 
-        for (int i = 0; i < testingData.getNumberOfPatterns(); i++) inputCells[i] = testingData.getPattern(i);
+        for (int i = 0; i < testingData.getNumberOfPatterns(); i++) {
+            inputCells[i] = testingData.getPattern(i);
             for(int j = 0; j < testingData.getPatternSize(); j++){
-                    testingData.getPattern(i).setPatternIndex(sequence[j], compute(j));;
-                }
+                    testingData.getPattern(i).setPatternIndex(sequence[j], compute(j));
             }
         }
         return inputCells;
+    }
+
+    private int[] generateRandomSequence(int size){
+        Random rand = new Random(size);
+        int [] randomSequence = new int[size];
+        boolean [] setAlready = new boolean[size];
+        int nextSequence = -1;
+
+        for(int i = 0; i < size; i++){
+            nextSequence = rand.nextInt;
+            while(setAlready[nextSequence] == true){
+                nextSequence = rand.nextInt();
+            }
+            randomSequence[i] = nextSequence;
+        }
     }
 }
 
