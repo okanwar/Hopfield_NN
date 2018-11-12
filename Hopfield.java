@@ -78,7 +78,13 @@ import java.io.*;
         for (int j = 0; j < numInputs; j++) {
             temp += weights[index][j] * inputCells[j];
         }
-        return 2.0f * temp - tempStorage[index];
+        int y = temp + tempStorage[index];
+
+        if(y > 0.0f) {
+            inputCells[i] = 1.0f;
+        } else if (inputCells[i] == 0) {
+            return tempStorage[index];
+        } else {inputCells[i] = -1.0f;}
     }
 
     public float[] deploy(float[] pattern, int numIterations) {
@@ -94,15 +100,12 @@ import java.io.*;
         testingData.setWeightsFromFile(weightsFile);
         weights = testingData.getWeights();
 
+        int [] sequence;
 
-        for (int i = 0; i < numInputs; i++) inputCells[i] = testingData.getPattern(i);
-            for (int ii = 0; ii < numIterations; ii++) {
-                for (int i = 0; i < numInputs; i++) {
-                    if(compute(i) > 0.0f) {
-                        inputCells[i] = 1.0f;
-                    } else if (inputCells[i] == 0) {
-                        return inputCells;
-                    } else {inputCells[i] = -1.0f;}
+        for (int i = 0; i < testingData.getNumberOfPatterns(); i++) inputCells[i] = testingData.getPattern(i);
+            for(int j = 0; j < testingData.getPatternSize(); j++){
+                    testingData.getPattern(i).setPatternIndex(sequence[j], compute(j));;
+                }
             }
         }
         return inputCells;

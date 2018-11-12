@@ -82,5 +82,9 @@ public class Pattern{
 
 		return patternstr;
 	}
+
+	public void setPatternIndex(int index,int newValue){
+		pattern[index] = newValue;
+	}
 }
 

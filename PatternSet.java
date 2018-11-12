@@ -227,4 +227,8 @@ public class PatternSet {
 	public float[] getWeights(){
 		return weights;
 	}
+
+	public int getNumberOfPatterns(){
+		return numberOfPatterns;
+	}
 }
