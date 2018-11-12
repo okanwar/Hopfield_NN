@@ -24,7 +24,10 @@ import java.io.*;
      String testData;
 
     public Hopfield(int numInputs) {
-
+        //pass in numInputs here//
+        weights = new float[numInputs][numInputs];
+        inputCells = new float[numInputs];
+        tempStorage = new float[numInputs];
 
     }
 
