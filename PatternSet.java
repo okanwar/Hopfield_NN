@@ -212,11 +212,4 @@ public class PatternSet {
 			System.out.println("Error printing weights to file. " + e);
 		}
 	}
-
-	public static void main(String [] args){
-		PatternSet ps = new PatternSet("smalltest");
-		System.out.println(ps.weigthsToString());
-		ps.weightsToFile("weightstest");
-		ps.setWeightsFromFile("weightstest");
-	}
 }
