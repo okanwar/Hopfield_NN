@@ -24,7 +24,7 @@ public class PatternSet {
 	 * @param file The file to initialize the pattern set from
 	 * @param ps The perceptron settings file the perceptron net was initialized from
 	 */
-	public PatternSet(String file) {
+	public PatternSet(String file, boolean training) {
 		this.dataFile = file;
 		this.patternSize = 0;
 		this.patternWidth = 0;
@@ -36,11 +36,14 @@ public class PatternSet {
 		this.weightsInitialized = true;
 
 		//Create pattern set
-		if (file != null)
-			this.setLoaded = loadSetFromFile();
-		initializeWeights();
-
-		this.setInitialized = this.setLoaded && this.weightsInitialized;
+		if(training){
+			if (file != null)
+				this.setLoaded = loadSetFromFile(dataFile);
+			initializeWeights();
+			this.setInitialized = this.setLoaded && this.weightsInitialized;
+		} else {
+			this.weightsInitialized = setWeightsFromFile(dataFile);
+		}
 
 	}
 
@@ -48,7 +51,7 @@ public class PatternSet {
 	 * loadSetFromFile - Loads a set from file
 	 * @return Returns a boolean indicating successful loading or not
 	 */
-	private boolean loadSetFromFile() {
+	private boolean loadSetFromFile(String file) {
 		BufferedReader reader = null;
 		String line = "";
 		String currentPattern = "";
@@ -56,7 +59,7 @@ public class PatternSet {
 
 		// Parse set
 		try {
-			reader = new BufferedReader(new FileReader(dataFile));
+			reader = new BufferedReader(new FileReader(file));
 			int firstThreeLines = 0;
 
 			// Read first two lines
@@ -108,7 +111,7 @@ public class PatternSet {
 				}
 			}
 		} catch (FileNotFoundException f) {
-			System.out.println("Could not create pattern set for file:" + dataFile);
+			System.out.println("Could not create pattern set for file:" + file);
 			return false;
 		} catch (Exception e) {
 			System.out.println("Error parsing file. " + e);
