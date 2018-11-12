@@ -63,6 +63,16 @@ public class Pattern{
 		return pattern.length;
 	}
 
+	public int[] getRow(int row){
+		int [] returnRow = new int[width];
+		int index = 0;
+		for(int i = row*width; i < row*width + width; i++){
+			returnRow[index] = pattern[i];
+			index++;
+		}
+		return returnRow;
+	}
+
 	public String toString(){
 		String patternstr = "";
 		for(int i = 0; i < pattern.length; i++){

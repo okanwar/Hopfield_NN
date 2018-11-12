@@ -16,7 +16,7 @@ public class PatternSet {
 	protected Pattern[] patternSet;
 	protected int patternSize, patternWidth, patternHeight, numberOfPatterns;
 	protected boolean setInitialized;
-	protected double[][] weights;
+	protected float[][] weights;
 	protected boolean setLoaded, weightsInitialized;
 	
 	/*
@@ -24,7 +24,7 @@ public class PatternSet {
 	 * @param file The file to initialize the pattern set from
 	 * @param ps The perceptron settings file the perceptron net was initialized from
 	 */
-	public PatternSet(String file, boolean training) {
+	public PatternSet(String file) {
 		this.dataFile = file;
 		this.patternSize = 0;
 		this.patternWidth = 0;
@@ -36,14 +36,10 @@ public class PatternSet {
 		this.weightsInitialized = true;
 
 		//Create pattern set
-		if(training){
-			if (file != null)
-				this.setLoaded = loadSetFromFile(dataFile);
-			initializeWeights();
-			this.setInitialized = this.setLoaded && this.weightsInitialized;
-		} else {
-			this.weightsInitialized = setWeightsFromFile(dataFile);
-		}
+		if (file != null)
+			this.setLoaded = loadSetFromFile(dataFile);
+		initializeWeights();
+		this.setInitialized = this.setLoaded && this.weightsInitialized;
 
 	}
 
@@ -130,15 +126,27 @@ public class PatternSet {
 	 */
 	private void initializeWeights() {
 
-		weights = new double[patternWidth][patternHeight];
+		weights = new float[patternWidth][patternHeight];
 		boolean successfulWeightInitialization = true;
 
 		for(int i = 0; i < patternWidth; i++){
 			for(int j = 0; j < patternHeight; j++){
-				weights[i][j] = j;
+				weights[i][j] = 0;
 			}
 		}
 
+	}
+
+	public void setWeights(float [][] newWeights){
+		this.weights = newWeights;
+	}
+
+	public int getPatternSize(){
+		return patternSize;
+	}
+
+	public Pattern getPattern(int patternIndex){
+		return patternSet[patternIndex];
 	}
 
 	/*
@@ -146,7 +154,7 @@ public class PatternSet {
 	 * @param weightsFile The file to initialize the weights from
 	 * @return Returns a boolean indicating successful loading of weights or unsuccessful loading
 	 */
-	private boolean setWeightsFromFile(String weightsFile) {
+	public boolean setWeightsFromFile(String weightsFile) {
 		// Initialize weights from file
 		BufferedReader reader = null;
 		String line = "";
@@ -157,7 +165,7 @@ public class PatternSet {
 			int patternHeight = Integer.parseInt(reader.readLine().trim());
 
 			if(weights == null){
-				weights = new double[patternWidth][patternHeight];
+				weights = new float[patternWidth][patternHeight];
 			}
 			
 			// //Verify weights match pattern set
@@ -175,7 +183,7 @@ public class PatternSet {
 				//Parse line of weights
 				StringTokenizer st = new StringTokenizer(line, " ");
 				while(st.hasMoreTokens()){
-					weights[columnIndex][rowIndex] = Double.parseDouble(st.nextToken());
+					weights[columnIndex][rowIndex] = Float.parseFloat(st.nextToken());
 					columnIndex++;
 				}
 				columnIndex = 0;
@@ -189,7 +197,7 @@ public class PatternSet {
 		return true;
 	}
 
-	public String weigthsToString(){
+	public String weightsToString(){
 		String strweights = "";
 		strweights += patternSize + "\n" + patternWidth + "\n" + patternHeight + "\n";
 		for(int i = 0; i < patternHeight; i++){
@@ -206,7 +214,7 @@ public class PatternSet {
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new FileWriter(filename));
-			writer.write(weigthsToString());
+			writer.write(weightsToString());
 			writer.close();
 			
 			System.out.println("\nSaved weights from training to: " + filename + "\n");
@@ -214,5 +222,9 @@ public class PatternSet {
 		} catch (Exception e) {
 			System.out.println("Error printing weights to file. " + e);
 		}
+	}
+
+	public float[] getWeights(){
+		return weights;
 	}
 }

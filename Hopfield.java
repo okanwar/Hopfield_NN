@@ -1,5 +1,5 @@
 import java.lang.*;
-import java.util.*
+import java.util.*;
 import java.io.*;
 
 /*
@@ -16,7 +16,7 @@ import java.io.*;
      int numInputs;
      float[][] weights;
      float[] tempStorage;
-     float[] inputCells;
+     int[] inputCells;
      int trainingDataSize;
      PatternSet trainingData;
      PatternSet testingData;
@@ -25,29 +25,44 @@ import java.io.*;
 
     public Hopfield(int numInputs) {
         //pass in numInputs here//
-        weights = new float[numInputs][numInputs];
-        inputCells = new float[numInputs];
+        inputCells = null;
         tempStorage = new float[numInputs];
-
+        weights = null;
     }
 
     public void train() {
+        //Get training file
+        Scanner input = new Scanner(System.in);
+        System.out.print("Enter the training file:");
+        String trainingFile = input.next();
+        System.out.println();
+        trainingData = new PatternSet(trainingFile);
+        weights = trainData.getWeights();
+
+
         for (int j = 1; j < numInputs; j++) {
             for (int i = 0; i < j; i++) {
-                for (int n = 0; n < trainingDataSize.getPatternSize(); n++) {
-                    float[] data = (float[]) trainingData.elementAt(n);
-                    float temp1 = adjustInput(data[i]) * adjustInput(data[j]);
+                for (int n = 0; n < trainingData.getPatternSize(); n++) {
+                    int[] data = trainingData.getPattern(j).getRow(n);
+                    float temp1 = adjustInput((float)data[i]) * adjustInput((float)data[j]);
                     float temp = truncate(temp1 + weights[j][i]);
                     weights[i][j] = weights[j][i] = temp;
                 }
             }
-            for (int i = 0; i < numInputs; i++) {
-                tempStorage[i] = 0.0f;
-                for (int j = 0; j < i; j++) {
-                    tempStorage[i] += weights[i][j];
+            for (int k = 0; k < numInputs; k++) {
+                tempStorage[k] = 0.0f;
+                for (int n = 0; n < k; n++) {
+                    tempStorage[n] += weights[n][k];
                 }
             }
         }
+
+        trainingData.setWeights(weights);
+        //Get weights file
+        System.out.print("Enter the weights file:");
+        String weightsFile = input.next();
+        System.out.println();
+        trainingData.weightsToFile(weightsFile);
     }
     private float adjustInput (float x) {
         if (x < 0.0f) return -1.0f;
@@ -67,16 +82,30 @@ import java.io.*;
     }
 
     public float[] deploy(float[] pattern, int numIterations) {
-        for (int i = 0; i < numInputs; i++) inputCells[i] = pattern[i];
-        for (int ii = 0; ii < numIterations; ii++) {
-            for (int i = 0; i < numInputs; i++) {
-                if(compute(i) > 0.0f) {
-                    inputCells[i] = 1.0f;
-                } else if (inputCells[i] = 0) {
-                    return inputCells;
-                } else {inputCells[i] = -1.0f;}
+        //Get training file
+        Scanner input = new Scanner(System.in);
+        System.out.print("Enter the deployment file:");
+        String deploymentFile = input.next();
+        System.out.println();
+        testingData = new PatternSet(deploymentFile);
+        System.out.println("enter the weights file:");
+        String weightsFile = input.next();
+        System.out.println();
+        testingData.setWeightsFromFile(weightsFile);
+        weights = testingData.getWeights();
+
+
+        for (int i = 0; i < numInputs; i++) inputCells[i] = testingData.getPattern(i);
+            for (int ii = 0; ii < numIterations; ii++) {
+                for (int i = 0; i < numInputs; i++) {
+                    if(compute(i) > 0.0f) {
+                        inputCells[i] = 1.0f;
+                    } else if (inputCells[i] == 0) {
+                        return inputCells;
+                    } else {inputCells[i] = -1.0f;}
             }
         }
         return inputCells;
     }
 }
+
