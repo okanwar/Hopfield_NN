@@ -12,14 +12,11 @@ import java.lang.*;
 
 public class PatternSet {
 
-	protected static final String DIVIDER = "--------------------------------------------------------------------------------------------------------------------\n";
 	protected String dataFile;
 	protected Pattern[] patternSet;
-	protected int inputPatternSize, outputPatternSize, numberOfTrainingPatterns;
+	protected int patternSize, patternWidth, patternHeight, numberOfPatterns;
 	protected boolean setInitialized;
 	protected double[][] weights;
-	protected double[] biasWeights;
-	protected PerceptronSettings p_settings;
 	protected boolean setLoaded, weightsInitialized;
 	
 	/*
@@ -27,121 +24,24 @@ public class PatternSet {
 	 * @param file The file to initialize the pattern set from
 	 * @param ps The perceptron settings file the perceptron net was initialized from
 	 */
-	public PatternSet(String file, PerceptronSettings ps) {
+	public PatternSet(String file) {
 		this.dataFile = file;
-		this.p_settings = ps;
-		this.inputPatternSize = 0;
-		this.outputPatternSize = 0;
-		this.numberOfTrainingPatterns = 0;
+		this.patternSize = 0;
+		this.patternWidth = 0;
+		this.patternHeight = 0;
+		this.numberOfPatterns = 0;
 		this.patternSet = null;
 		this.weights = null;
-		this.biasWeights = null;
 		this.setLoaded = false;
-		this.weightsInitialized = false;
+		this.weightsInitialized = true;
 
 		//Create pattern set
 		if (file != null)
 			this.setLoaded = loadSetFromFile();
-		this.weightsInitialized = initializeWeights();
+		initializeWeights();
 
 		this.setInitialized = this.setLoaded && this.weightsInitialized;
 
-	}
-
-	/*
-	 * setInitialized - Returns whether or not set was initialized
-	 * @return Returns boolean whether the set was initialized properly or not
-	 */
-	public boolean setInitialized() {
-		return this.setInitialized;
-	}
-
-	/*
-	 * getPatternSet - Returns the pattern set
-	 * @return The pattern set the object manages
-	 */
-	public Pattern[] getPatternSet() {
-		return patternSet;
-	}
-
-	/*
-	 * getOutputPatternSize - Returns the output pattern size for the pattern
-	 * @return Int representing the output pattern size/number of output neurons
-	 */
-	public int getOutputPatternSize() {
-		return outputPatternSize;
-	}
-
-	/*
-	 * getInputPatternSize - Returns the input pattern size for the pattern
-	 * @return Int representing the input pattern size/number of input neurons
-	 */
-	public int getInputPatternSize() {
-		return inputPatternSize;
-	}
-
-	/*
-	 * getNumberOfPatterns - Returns the number of patterns in the pattern set
-	 * @param Int The number of patterns in the set
-	 */
-	public int getNumberOfPatterns() {
-		return numberOfTrainingPatterns;
-	}
-
-	/*
-	 * getWeights - Returns the weights of the set
-	 * @return Returns a 2d double array representing the weights
-	 */
-	public double[][] getWeights() {
-		return weights;
-	}
-
-	/*
-	 * getWeightsForOutput - Returns the weights for a specific output neuron
-	 * @param output The output neuron to get the weights for
-	 * @return A double array containing the weights for the requested output neuron
-	 */
-	public double[] getWeightsForOutput(int output) {
-		return weights[output];
-	}
-
-	/*
-	 * getWeightsForOutputAt - Returns the weights for an output neuron and a specific sample
-	 * @param ouput The output neuron to get the weight for
-	 * @param input The input/sample index to get the weight for
-	 * @return Returns the weight of the parameters
-	 */
-	public double getWeightsForOutputAt(int output, int input) {
-		return weights[output][input];
-	}
-
-	/*
-	 * getBiasWeights - Returns an array containing all the bias weights for the set
-	 * @return Returns a double array containing all bias weights for the set
-	 */
-	public double[] getBiasWeights() {
-		return biasWeights;
-	}
-
-	/*
-	 * getBiasWeight - Returns the bias weight of an output neuron
-	 * @param outputNeuron The output neuron to return the weight for
-	 * @return The bias weight for the specified output neuron
-	 */
-	public double getBiasWeight(int outputNeuron) {
-		return biasWeights[outputNeuron];
-	}
-
-	/*
-	 * printSet - Prints the pattern set
-	 */
-	public void printSet() {
-		if (patternSet != null) {
-			System.out.println("--- " + dataFile + "---");
-			for (int i = 0; i < patternSet.length; i++) {
-				patternSet[i].printPair();
-			}
-		}
 	}
 
 	/*
@@ -151,67 +51,62 @@ public class PatternSet {
 	private boolean loadSetFromFile() {
 		BufferedReader reader = null;
 		String line = "";
+		String currentPattern = "";
+		int patternIndex = 0;
 
 		// Parse set
 		try {
 			reader = new BufferedReader(new FileReader(dataFile));
 			int firstThreeLines = 0;
 
-			// Read first three lines
-			inputPatternSize = Integer.parseInt(reader.readLine().trim());
-			outputPatternSize = Integer.parseInt(reader.readLine().trim());
-			numberOfTrainingPatterns = Integer.parseInt(reader.readLine().trim());
+			// Read first two lines
+			String lineOne = reader.readLine().trim();
+			String lineTwo = reader.readLine().trim();
+			
+			//Tokinze first two lines
+			StringTokenizer strtok = new StringTokenizer(lineOne, " ");
+			if(strtok.hasMoreTokens()) patternSize = Integer.parseInt(strtok.nextToken());
+			strtok = new StringTokenizer(lineTwo, " ");
+			if(strtok.hasMoreTokens()) numberOfPatterns = Integer.parseInt(strtok.nextToken());
+
 
 			// Setup set
-			patternSet = new Pattern[numberOfTrainingPatterns];
+			patternSet = new Pattern[numberOfPatterns];
+			
+			int countingPatternHeight = 0;
+
 
 			// Begin reading samples
-			int linesOfInputPattern = inputPatternSize / outputPatternSize;
-			int sampleIndex = 0;
-			int trainingSetIndex = 0;
-			String inputPattern = "";
-			String outputPattern = "";
-			String classification = "";
-			String lines = "";
-			StringTokenizer st = null;
-
-			// Read a single sample
-			while ((line = reader.readLine()) != null) {
-				if (!line.isEmpty()) {
-					if(line.trim().indexOf(" ") != -1) {
-						//Reading input and output patterns
-						lines+=line + "|";
-					} else {
-						//Found classification
-						st = new StringTokenizer(lines, "|");
-						int numTokens = st.countTokens();
-						int tokenNum = 0;
-						String input_string = "";
-						String output_string = "";
-						//Get input and output patterns
-						while(st.hasMoreTokens()) {
-							if(tokenNum != (numTokens-1)) {
-								input_string += st.nextToken() + " ";
-							} else {
-								output_string = st.nextToken();
+			while((line = reader.readLine()) != null){
+				if(!line.isEmpty()){
+					if(patternWidth == 0){
+						patternWidth = line.length();
+					} 
+					//Create pattern
+					currentPattern += line.substring(0, patternWidth);
+					countingPatternHeight++;
+				} else {
+					//Finished reading a pattern
+					if(!currentPattern.isEmpty()){
+						//Check pattern height
+						if(patternHeight == 0){
+							patternHeight = countingPatternHeight;
+						} else {
+							//Verify all patterns have the same height
+							if(countingPatternHeight != patternHeight){
+								System.out.println("Error pattern has a height of:" + countingPatternHeight+
+								" but patterns have a height of " + patternHeight);
 							}
-							tokenNum++;
 						}
-						
+						countingPatternHeight = 0;
+
 						//Create pattern
-						Pattern p1 = new Pattern(inputPatternSize, outputPatternSize);
-						p1.getStrings(input_string, output_string, line.trim());
-						patternSet[trainingSetIndex] = p1;
-						trainingSetIndex++;
-						lines = "";
+						patternSet[patternIndex] = new Pattern(currentPattern, patternWidth, patternHeight);
+						currentPattern = "";
+						patternIndex++;
 					}
-					
-					
-					
 				}
 			}
-			setInitialized = true;
-			return true;
 		} catch (FileNotFoundException f) {
 			System.out.println("Could not create pattern set for file:" + dataFile);
 			return false;
@@ -219,83 +114,28 @@ public class PatternSet {
 			System.out.println("Error parsing file. " + e);
 			return false;
 		}
+		patternSet[patternIndex] = new Pattern(currentPattern, patternWidth, patternHeight);
+
+		for(int i = 0; i < patternSet.length; i++){
+			System.out.println(patternSet[i].toString());
+		}
+		return true;
 	}
 
 	/*
 	 * initializeWeights - Initializes the weights from net settings
 	 */
-	private boolean initializeWeights() {
+	private void initializeWeights() {
 
-		weights = new double[outputPatternSize][inputPatternSize];
-		biasWeights = new double[outputPatternSize];
+		weights = new double[patternWidth][patternHeight];
 		boolean successfulWeightInitialization = true;
 
-		if (p_settings.getTrainingSet() != null) {
-			// For deploying immediately after training
-			setWeightsFromTrainingSet();
-		} else {
-			// Not deploying after training, so two choices
-			if (!p_settings.loadWeightsFromFile()) {
-				// Initializing weights from scratch
-				successfulWeightInitialization = initializeWeightsFromSettings(
-						p_settings.initializeWithRandomWeights());
-			} else {
-				// Loading weights from file
-				successfulWeightInitialization = setWeightsFromFile(p_settings.getWeightsFile());
+		for(int i = 0; i < patternWidth; i++){
+			for(int j = 0; j < patternHeight; j++){
+				weights[i][j] = j;
 			}
 		}
 
-		return successfulWeightInitialization;
-	}
-
-	/*
-	 * setWeightsFromTrainingSet - Initializes the weights from the training set in PerceptronSettings
-	 */
-	private void setWeightsFromTrainingSet() {
-		weights = p_settings.getTrainingSet().getWeights();
-		biasWeights = p_settings.getTrainingSet().getBiasWeights();
-	}
-
-	/*
-	 * initializeWeightsFromSettings - Initializes the weights from scratch
-	 * @param randomWeights Specifies wether or not to initialize the weights randomly or all 0
-	 * @return Returns a boolean indicating successful loading or unsuccessful loading
-	 */
-	private boolean initializeWeightsFromSettings(boolean randomWeights) {
-		// Initialize weights randomly or all to 0
-		double weightValue = 0;
-		Random rand = null;
-		if (randomWeights) {
-			rand = new Random();
-		}
-		try {
-			// Initialize Neuron weights
-			for (int output = 0; output < outputPatternSize; output++) {
-				// Initialize all weights of input pattern for output neuron
-				for (int input = 0; input < inputPatternSize; input++) {
-					if (randomWeights) {
-						// Get random weight value
-						weightValue = rand.nextDouble() - 0.5;
-					}
-					weights[output][input] = weightValue;
-				}
-			}
-
-			// Initialize bias weigts
-			weightValue = 0;
-			for (int biasCount = 0; biasCount < outputPatternSize; biasCount++) {
-				if (randomWeights) {
-					// Get random weight value
-					weightValue = rand.nextDouble() - 0.5;
-				}
-				biasWeights[biasCount] = weightValue;
-			}
-
-		} catch (Exception e) {
-			System.out.println("Error initializing weights. " + e);
-			return false;
-		}
-		return true;
 	}
 
 	/*
@@ -309,57 +149,74 @@ public class PatternSet {
 		String line = "";
 		try {
 			reader = new BufferedReader(new FileReader(weightsFile));
-			int inputSize = Integer.parseInt(reader.readLine().trim());
-			int outputSize = Integer.parseInt(reader.readLine().trim());
-			
-			//Verify weights match pattern set
-			if (this.inputPatternSize != inputSize || this.outputPatternSize != outputSize) {
-				System.out.println("Input and output sizes of weights do not match the pattern set.\n" +
-					"Expected input size:" + this.inputPatternSize + " actual:" + inputSize + 
-					"\nExpected output size:" + this.outputPatternSize + " actual:" + outputSize);
-				return false;
+			int patternSize = Integer.parseInt(reader.readLine().trim());
+			int patternWidth = Integer.parseInt(reader.readLine().trim());
+			int patternHeight = Integer.parseInt(reader.readLine().trim());
+
+			if(weights == null){
+				weights = new double[patternWidth][patternHeight];
 			}
 			
-			//Threshold
-			p_settings.setThresholdTheta(Double.parseDouble(reader.readLine().trim()));
+			// //Verify weights match pattern set
+			// if (this.inputPatternSize != inputSize || this.outputPatternSize != outputSize) {
+			// 	System.out.println("Input and output sizes of weights do not match the pattern set.\n" +
+			// 		"Expected input size:" + this.inputPatternSize + " actual:" + inputSize + 
+			// 		"\nExpected output size:" + this.outputPatternSize + " actual:" + outputSize);
+			// 	return false;
+			// }
 			
 			//Begin reading weights
-			int patternIndex = 0;
-			int readLine = 0;
+			int rowIndex = 0;
+			int columnIndex = 0;
 			while ((line = reader.readLine()) != null) {
-				if (!line.isEmpty()) {
-					if (readLine == 0) {
-						// Read bias weight
-						double biasweight = Double.parseDouble(line.trim());
-						biasWeights[patternIndex] = Double.parseDouble(line.trim());
-
-					} else if (patternIndex == outputPatternSize) {
-						// Read all weights, return 
-						return true;
-					} else {
-						// Readline is all weights for output index
-						StringTokenizer st = new StringTokenizer(line, " ");
-						int weightIndex = 0;
-						while (st.hasMoreTokens()) {
-							String token = st.nextToken();
-							weights[patternIndex][weightIndex] = Double.parseDouble(token);
-							weightIndex++;
-						}
-					}
-
-					readLine++;
-					if (readLine == 2) {
-						// Read both weights
-						readLine = 0;
-						patternIndex++;
-					}
-
+				//Parse line of weights
+				StringTokenizer st = new StringTokenizer(line, " ");
+				while(st.hasMoreTokens()){
+					weights[columnIndex][rowIndex] = Double.parseDouble(st.nextToken());
+					columnIndex++;
 				}
+				columnIndex = 0;
+				rowIndex++;
 			}
 		} catch (Exception e) {
 			System.out.println("Error reading weights from file. " + e);
 			return false;
 		}
+
 		return true;
+	}
+
+	public String weigthsToString(){
+		String strweights = "";
+		strweights += patternSize + "\n" + patternWidth + "\n" + patternHeight + "\n";
+		for(int i = 0; i < patternHeight; i++){
+			for(int j = 0; j < patternWidth; j++){
+				strweights += weights[j][i] + " ";
+			}
+			strweights += "\n";
+		}
+
+		return strweights;
+	}
+
+	public void weightsToFile(String filename){
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(filename));
+			writer.write(weigthsToString());
+			writer.close();
+			
+			System.out.println("\nSaved weights from training to: " + filename + "\n");
+			
+		} catch (Exception e) {
+			System.out.println("Error printing weights to file. " + e);
+		}
+	}
+
+	public static void main(String [] args){
+		PatternSet ps = new PatternSet("smalltest");
+		System.out.println(ps.weigthsToString());
+		ps.weightsToFile("weightstest");
+		ps.setWeightsFromFile("weightstest");
 	}
 }
