@@ -28,21 +28,13 @@ public class Main {
 				int mode = input.nextInt();
 
 				Hopfield hopfieldObject = new Hopfield();
-                Hopfield h1 = new Hopfield(hopfieldObject, false);
 
 				if (mode == 1) {
 					// New net from scratch
-					perceptronSettings.setUserSettings();
-
-					// Create net
-					p1.trainNet();
-					perceptronSettings.setDeploymentFile(null);
-					p1.deployNet();
+					hopfieldObject.train();
+					hopfieldObject.deploy();
 				} else {
 					// Load from file
-					perceptronSettings.setWeightsFile(null, true);
-					perceptronSettings.setDeploymentFile(null);
-					p1.deployNet();
 
 				}
 				
@@ -56,58 +48,58 @@ public class Main {
 				
 			}
 		} else {
-			// Run with specifications from file
-			String userRunsFile = args[0];
-
-			// Try to open file
-			BufferedReader reader = null;
-			String line = "";
-			try {
-				reader = new BufferedReader(new FileReader(userRunsFile));
-				while ((line = reader.readLine()) != null) {
-					// New perceptron
-					PerceptronSettings perceptronSettings = null;
-
-					// Determine mode
-					if (!line.isEmpty()) {
-						if (line.charAt(0) == '1') {
-							// Extract net settings from file
-							String[] userSettings = new String[8];
-							StringTokenizer st = new StringTokenizer(line, " ");
-							st.nextToken(); // Skip first token, it is just the
-											// mode
-							int index = 0;
-							while (st.hasMoreTokens()) {
-								userSettings[index] = st.nextToken();
-								index++;
-							}
-
-							if (userSettings[1].equals("1")) {
-								userSettings[1] = "true";
-							} else {
-								userSettings[1] = "false";
-							}
-
-							// Initialize perceptron with parsed settings
-							Perceptron p1 = new Perceptron(new PerceptronSettings(userSettings), false);
-							p1.trainNet();
-							p1.deployNet();
-						} else {
-							// Load net from file
-							perceptronSettings = new PerceptronSettings();
-							Perceptron p1 = new Perceptron(perceptronSettings, false);
-
-							StringTokenizer st = new StringTokenizer(line, " ");
-							st.nextToken(); // Skip first token
-							perceptronSettings.setWeightsFile(st.nextToken(), true);
-							perceptronSettings.setDeploymentFile(st.nextToken());
-							p1.deployNet();
-						}
-					}
-				}
-			} catch (Exception e) {
-				System.out.println("Error reading runs from file. " + e);
-			}
+//			// Run with specifications from file
+//			String userRunsFile = args[0];
+//
+//			// Try to open file
+//			BufferedReader reader = null;
+//			String line = "";
+//			try {
+//				reader = new BufferedReader(new FileReader(userRunsFile));
+//				while ((line = reader.readLine()) != null) {
+//					// New perceptron
+//					PerceptronSettings perceptronSettings = null;
+//
+//					// Determine mode
+//					if (!line.isEmpty()) {
+//						if (line.charAt(0) == '1') {
+//							// Extract net settings from file
+//							String[] userSettings = new String[8];
+//							StringTokenizer st = new StringTokenizer(line, " ");
+//							st.nextToken(); // Skip first token, it is just the
+//											// mode
+//							int index = 0;
+//							while (st.hasMoreTokens()) {
+//								userSettings[index] = st.nextToken();
+//								index++;
+//							}
+//
+//							if (userSettings[1].equals("1")) {
+//								userSettings[1] = "true";
+//							} else {
+//								userSettings[1] = "false";
+//							}
+//
+//							// Initialize perceptron with parsed settings
+//							Perceptron p1 = new Perceptron(new PerceptronSettings(userSettings), false);
+//							p1.trainNet();
+//							p1.deployNet();
+//						} else {
+//							// Load net from file
+//							perceptronSettings = new PerceptronSettings();
+//							Perceptron p1 = new Perceptron(perceptronSettings, false);
+//
+//							StringTokenizer st = new StringTokenizer(line, " ");
+//							st.nextToken(); // Skip first token
+//							perceptronSettings.setWeightsFile(st.nextToken(), true);
+//							perceptronSettings.setDeploymentFile(st.nextToken());
+//							p1.deployNet();
+//						}
+//					}
+//				}
+//			} catch (Exception e) {
+//				System.out.println("Error reading runs from file. " + e);
+//			}
 		}
 	}
 }

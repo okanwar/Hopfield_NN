@@ -73,16 +73,18 @@ public class PatternSet {
 			patternSet = new Pattern[numberOfPatterns];
 			
 			int countingPatternHeight = 0;
+			int currentPatternSize = 0;
 
 
 			// Begin reading samples
 			while((line = reader.readLine()) != null){
-				if(!line.isEmpty()){
+				if(!line.isEmpty() && currentPatternSize != patternSize){
 					if(patternWidth == 0){
 						patternWidth = line.length();
 					} 
 					//Create pattern
 					currentPattern += line.substring(0, patternWidth);
+					currentPatternSize += patternWidth;
 					countingPatternHeight++;
 				} else {
 					//Finished reading a pattern
@@ -103,6 +105,7 @@ public class PatternSet {
 						patternSet[patternIndex] = new Pattern(currentPattern, patternWidth, patternHeight);
 						currentPattern = "";
 						patternIndex++;
+						currentPatternSize = 0;
 					}
 				}
 			}
@@ -126,11 +129,11 @@ public class PatternSet {
 	 */
 	private void initializeWeights() {
 
-		weights = new float[patternWidth][patternHeight];
+		weights = new float[patternSize][patternSize];
 		boolean successfulWeightInitialization = true;
 
-		for(int i = 0; i < patternWidth; i++){
-			for(int j = 0; j < patternHeight; j++){
+		for(int i = 0; i < patternSize; i++){
+			for(int j = 0; j < patternSize; j++){
 				weights[i][j] = 0;
 			}
 		}
@@ -165,16 +168,8 @@ public class PatternSet {
 			int patternHeight = Integer.parseInt(reader.readLine().trim());
 
 			if(weights == null){
-				weights = new float[patternWidth][patternHeight];
+				weights = new float[patternSize][patternSize];
 			}
-			
-			// //Verify weights match pattern set
-			// if (this.inputPatternSize != inputSize || this.outputPatternSize != outputSize) {
-			// 	System.out.println("Input and output sizes of weights do not match the pattern set.\n" +
-			// 		"Expected input size:" + this.inputPatternSize + " actual:" + inputSize + 
-			// 		"\nExpected output size:" + this.outputPatternSize + " actual:" + outputSize);
-			// 	return false;
-			// }
 			
 			//Begin reading weights
 			int rowIndex = 0;
@@ -200,9 +195,9 @@ public class PatternSet {
 	public String weightsToString(){
 		String strweights = "";
 		strweights += patternSize + "\n" + patternWidth + "\n" + patternHeight + "\n";
-		for(int i = 0; i < patternHeight; i++){
-			for(int j = 0; j < patternWidth; j++){
-				strweights += weights[j][i] + " ";
+		for(int i = 0; i < patternSize; i++){
+			for(int j = 0; j < patternSize; j++){
+				strweights += String.format("%8s", weights[j][i] + " ");
 			}
 			strweights += "\n";
 		}
@@ -223,8 +218,25 @@ public class PatternSet {
 			System.out.println("Error printing weights to file. " + e);
 		}
 	}
+	
+	public void patternsToFile(String filename) {
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(filename));
+			for(int pattern = 0; pattern < numberOfPatterns; pattern++) {
+				writer.write(patternSet[pattern].toString());
+				writer.newLine();
+			}
+			writer.close();
+			
+			System.out.println("\nSaved patterns from set to: " + filename + "\n");
+			
+		} catch (Exception e) {
+			System.out.println("Error printing patterns to file. " + e);
+		}
+	}
 
-	public float[] getWeights(){
+	public float[][] getWeights(){
 		return weights;
 	}
 

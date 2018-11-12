@@ -12,118 +12,117 @@ import java.io.*;
  *
  */
 
- public class Hopfield {
-     int numInputs;
-     float[][] weights;
-     float[] tempStorage;
-     int[] inputCells;
-     int trainingDataSize;
-     PatternSet trainingData;
-     PatternSet testingData;
-     String trainData;
-     String testData;
+public class Hopfield {
+	private PatternSet trainingData;
+	private PatternSet testingData;
 
-    public Hopfield(int numInputs) {
-        //pass in numInputs here//
-        inputCells = null;
-        tempStorage = new float[numInputs];
-        weights = null;
-    }
+	public Hopfield() {
+		trainingData = null;
+		testingData = null;
+	}
 
-    public void train() {
-        //Get training file
-        Scanner input = new Scanner(System.in);
-        System.out.print("Enter the training file:");
-        String trainingFile = input.next();
-        System.out.println();
-        trainingData = new PatternSet(trainingFile);
-        weights = trainData.getWeights();
+	public void train() {
+		// Get training file
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter the training file:");
+		String trainingFile = input.next();
+		System.out.println();
+		trainingData = new PatternSet(trainingFile);
 
+		// Create weight matrix by outerproduct of all patterns
+		for (int j = 0; j < trainingData.getNumberOfPatterns(); j++) {
+			// Compute outerproduct per pattern and add to weights
+			add(trainingData.getWeights(), outerproduct(trainingData.getPattern(j)));
+		}
 
-        for (int j = 1; j < numInputs; j++) {
-            for (int i = 0; i < j; i++) {
-                for (int n = 0; n < trainingData.getPatternSize(); n++) {
-                    int[] data = trainingData.getPattern(j).getRow(n);
-                    float temp1 = adjustInput((float)data[i]) * adjustInput((float)data[j]);
-                    float temp = truncate(temp1 + weights[j][i]);
-                    weights[i][j] = weights[j][i] = temp;
-                }
-            }
-            for (int k = 0; k < numInputs; k++) {
-                tempStorage[k] = 0.0f;
-                for (int n = 0; n < k; n++) {
-                    tempStorage[n] += weights[n][k];
-                }
-            }
-        }
+		// Get weights file
+		System.out.print("Enter the weights file:");
+		String weightsFile = input.next();
+		System.out.println();
+		trainingData.weightsToFile(weightsFile);
+	}
 
-        trainingData.setWeights(weights);
-        //Get weights file
-        System.out.print("Enter the weights file:");
-        String weightsFile = input.next();
-        System.out.println();
-        trainingData.weightsToFile(weightsFile);
-    }
-    private float adjustInput (float x) {
-        if (x < 0.0f) return -1.0f;
-        return 1.0f;
-    }
+	private int[][] outerproduct(Pattern p) {
+		int[][] outerproduct = new int[p.getSize()][p.getSize()];
+		for (int i = 0; i < p.getSize(); i++) {
+			for (int j = 0; j < p.getSize(); j++) {
+				outerproduct[i][j] = p.valueAt(i) * p.valueAt(j);
+			}
+		}
+		return outerproduct;
+	}
 
-    private float truncate(float x) {
-        int i = (int) x;
-        return (float) i;
-    }
-    public int compute(Pattern pattern, int index) {
-        float temp = 0.0f;
-        for (int j = 0; j < numInputs; j++) {
-            temp += weights[index][j] * inputCells[j];
-        }
-        int y = temp + tempStorage[index];
+	private void add(float[][] mat1, int[][] mat2) {
+		for (int i = 0; i < mat1.length; i++) {
+			for (int j = 0; j < mat1[0].length; j++) {
+				mat1[i][j] += mat2[i][j];
+			}
+		}
+	}
 
-        if(y > 0.0f) {
-            return 1;
-        } else if (inputCells[i] == 0) {
-            return pattern.valueAt(index);
-        } else {return -1;}
-    }
+	public int compute(Pattern pattern, int index) {
+		int y = 0;
+		for (int j = 0; j < testingData.getNumberOfPatterns(); j++) {
+			y += testingData.getWeights()[index][j] * pattern.valueAt(j);
+		}
 
-    public float[] deploy(float[] pattern, int numIterations) {
-        //Get training file
-        Scanner input = new Scanner(System.in);
-        System.out.print("Enter the deployment file:");
-        String deploymentFile = input.next();
-        System.out.println();
-        testingData = new PatternSet(deploymentFile);
-        System.out.println("enter the weights file:");
-        String weightsFile = input.next();
-        System.out.println();
-        testingData.setWeightsFromFile(weightsFile);
-        weights = testingData.getWeights();
+		if (y > 0.0f) {
+			return 1;
+		} else if (y == 0) {
+			return pattern.valueAt(index);
+		} else {
+			return -1;
+		}
+	}
 
-        int [] sequence = generateRandomSequence(testingData.getPatternSize());
+	public void deploy() {
+		// Get training file
+		Scanner input = new Scanner(System.in);
+		System.out.print("Enter the deployment file:");
+		String deploymentFile = input.next();
+		System.out.println();
+		testingData = new PatternSet(deploymentFile);
+		System.out.println("enter the weights file:");
+		String weightsFile = input.next();
+		System.out.println();
+		testingData.setWeightsFromFile(weightsFile);
 
-        for (int i = 0; i < testingData.getNumberOfPatterns(); i++) {
-            inputCells[i] = testingData.getPattern(i);
-            for(int j = 0; j < testingData.getPatternSize(); j++){
-                    testingData.getPattern(i).setPatternIndex(sequence[j], compute(testingData.getPattern(i),j));
-            }
-        }
-        return inputCells;
-    }
+		int[] sequence = generateRandomSequence(testingData.getPatternSize());
+		boolean converged = false;
 
-    private int[] generateRandomSequence(int size){
-        Random rand = new Random(size);
-        int [] randomSequence = new int[size];
-        boolean [] setAlready = new boolean[size];
-        int nextSequence = -1;
+		for (int i = 0; i < testingData.getNumberOfPatterns(); i++) {
+			while (!converged) {
+				for (int j = 0; j < testingData.getPatternSize(); j++) {
+					int calculatedVal = compute(testingData.getPattern(i), sequence[j]);
+					testingData.getPattern(i).updatePatternAtIndex(sequence[j], calculatedVal);
+				}
+				//Check for convergence
+				if(!testingData.getPattern(i).changed()) {
+					converged = true;
+				}
+			}
+		}
 
-        for(int i = 0; i < size; i++){
-            nextSequence = rand.nextInt;
-            while(setAlready[nextSequence] == true){
-                nextSequence = rand.nextInt();
-            }
-            randomSequence[i] = nextSequence;
-        }
-    }
+		System.out.print("Enter the results file:");
+		String resultsFile = input.next();
+		System.out.println();
+		testingData.patternsToFile(resultsFile);
+	}
+
+	private int[] generateRandomSequence(int size) {
+		Random rand = new Random();
+		int[] randomSequence = new int[size];
+		boolean[] setAlready = new boolean[size];
+		int nextSequence = -1;
+
+		for (int i = 0; i < size; i++) {
+			nextSequence = rand.nextInt(size);
+			while (setAlready[nextSequence] == true) {
+				nextSequence = rand.nextInt(size);
+			}
+			setAlready[nextSequence] = true;
+			randomSequence[i] = nextSequence;
+		}
+		return randomSequence;
+	}
 }
-

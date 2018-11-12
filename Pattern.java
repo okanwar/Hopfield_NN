@@ -9,9 +9,9 @@ import java.util.*;
  */
 
 public class Pattern{
-
 	private int[] pattern;
 	private int width, height;
+	private boolean patternChanges;
 
 	/*
 	 * Constructor
@@ -20,12 +20,16 @@ public class Pattern{
 	 */
 	public Pattern(int patternSize){
 		pattern = new int[patternSize];
+		width = 0;
+		height = 0;
+		patternChanges = false;
 	}
 
 	public Pattern(String patternString, int width, int height){
 		pattern = new int[patternString.length()];
 		this.width = width;
 		this.height = height;
+		patternChanges = false;
 		setPattern(patternString);
 	}
 
@@ -44,6 +48,10 @@ public class Pattern{
 				}
 			}
 		}
+	}
+	
+	public int[] getPattern() {
+		return pattern;
 	}
 	
 	/*
@@ -83,8 +91,31 @@ public class Pattern{
 		return patternstr;
 	}
 
-	public void setPatternIndex(int index,int newValue){
+	public void updatePatternAtIndex(int index,int newValue){
+		if(pattern[index] != newValue)
+			patternChanges = true;
 		pattern[index] = newValue;
 	}
+	
+	public int getWidth() {
+		return width;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
+	
+	public boolean changed() {
+		return patternChanges;
+	}
+
 }
 
