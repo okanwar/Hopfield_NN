@@ -14,92 +14,36 @@ public class Main {
 	public static void main(String[] args) {
 
 		boolean quit = false;
-		
-		if (args.length == 0) {
-			while(!quit) {
-				// Run by prompts
-   				String mainPrompt = "---- Welcome to the Hopfield Nnet ----\n" +
-                        "(1) Train a new Hopeifld Net\n"
-						+ "(2) Testing\n";
 
-				// Get mode
-				Scanner input = new Scanner(System.in);
-				System.out.println(mainPrompt);
-				int mode = input.nextInt();
+		while (!quit) {
+			// Run by prompts
+			String mainPrompt = "---- Welcome to the Hopfield Nnet ----\n" + "(1) Train a new Hopeifld Net\n"
+					+ "(2) Load net from file\n";
 
-				Hopfield hopfieldObject = new Hopfield();
+			// Get mode
+			Scanner input = new Scanner(System.in);
+			System.out.println(mainPrompt);
+			int mode = input.nextInt();
 
-				if (mode == 1) {
-					// New net from scratch
-					hopfieldObject.train();
-					hopfieldObject.deploy();
-				} else {
-					// Load from file
+			Hopfield hopfieldObject = new Hopfield();
 
-				}
-				
-				//Run again?
-				System.out.print("Enter 1 to quit or 0 to continue ");
-				int userIn = input.nextInt();
-				System.out.println();
-				if(userIn == 1) {
-					quit = true;
-				}
-				
+			if (mode == 1) {
+				// New net from scratch
+				hopfieldObject.train();
+				hopfieldObject.deploy();
+			} else {
+				// Load from file
+				hopfieldObject.deploy();
 			}
-		} else {
-//			// Run with specifications from file
-//			String userRunsFile = args[0];
-//
-//			// Try to open file
-//			BufferedReader reader = null;
-//			String line = "";
-//			try {
-//				reader = new BufferedReader(new FileReader(userRunsFile));
-//				while ((line = reader.readLine()) != null) {
-//					// New perceptron
-//					PerceptronSettings perceptronSettings = null;
-//
-//					// Determine mode
-//					if (!line.isEmpty()) {
-//						if (line.charAt(0) == '1') {
-//							// Extract net settings from file
-//							String[] userSettings = new String[8];
-//							StringTokenizer st = new StringTokenizer(line, " ");
-//							st.nextToken(); // Skip first token, it is just the
-//											// mode
-//							int index = 0;
-//							while (st.hasMoreTokens()) {
-//								userSettings[index] = st.nextToken();
-//								index++;
-//							}
-//
-//							if (userSettings[1].equals("1")) {
-//								userSettings[1] = "true";
-//							} else {
-//								userSettings[1] = "false";
-//							}
-//
-//							// Initialize perceptron with parsed settings
-//							Perceptron p1 = new Perceptron(new PerceptronSettings(userSettings), false);
-//							p1.trainNet();
-//							p1.deployNet();
-//						} else {
-//							// Load net from file
-//							perceptronSettings = new PerceptronSettings();
-//							Perceptron p1 = new Perceptron(perceptronSettings, false);
-//
-//							StringTokenizer st = new StringTokenizer(line, " ");
-//							st.nextToken(); // Skip first token
-//							perceptronSettings.setWeightsFile(st.nextToken(), true);
-//							perceptronSettings.setDeploymentFile(st.nextToken());
-//							p1.deployNet();
-//						}
-//					}
-//				}
-//			} catch (Exception e) {
-//				System.out.println("Error reading runs from file. " + e);
-//			}
+
+			// Run again?
+			System.out.print("Enter 1 to quit or 0 to continue ");
+			int userIn = input.nextInt();
+			System.out.println();
+			if (userIn == 1) {
+				quit = true;
+			}
+
 		}
 	}
 }

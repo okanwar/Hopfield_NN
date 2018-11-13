@@ -12,42 +12,35 @@ import java.lang.*;
 
 public class PatternSet {
 
-	protected String dataFile;
 	protected Pattern[] patternSet;
 	protected int patternSize, patternWidth, patternHeight, numberOfPatterns;
 	protected boolean setInitialized;
-	protected float[][] weights;
-	protected boolean setLoaded, weightsInitialized;
-	
+	protected int[][] weights;
+
 	/*
 	 * Constructor
+	 * 
 	 * @param file The file to initialize the pattern set from
-	 * @param ps The perceptron settings file the perceptron net was initialized from
+	 * 
+	 * @param ps The perceptron settings file the perceptron net was initialized
+	 * from
 	 */
-	public PatternSet(String file) {
-		this.dataFile = file;
+	public PatternSet() {
 		this.patternSize = 0;
 		this.patternWidth = 0;
 		this.patternHeight = 0;
 		this.numberOfPatterns = 0;
 		this.patternSet = null;
 		this.weights = null;
-		this.setLoaded = false;
-		this.weightsInitialized = true;
-
-		//Create pattern set
-		if (file != null)
-			this.setLoaded = loadSetFromFile(dataFile);
-		initializeWeights();
-		this.setInitialized = this.setLoaded && this.weightsInitialized;
 
 	}
 
 	/*
 	 * loadSetFromFile - Loads a set from file
+	 * 
 	 * @return Returns a boolean indicating successful loading or not
 	 */
-	private boolean loadSetFromFile(String file) {
+	public boolean loadSetFromFile(String file) {
 		BufferedReader reader = null;
 		String line = "";
 		String currentPattern = "";
@@ -61,47 +54,36 @@ public class PatternSet {
 			// Read first two lines
 			String lineOne = reader.readLine().trim();
 			String lineTwo = reader.readLine().trim();
-			
-			//Tokinze first two lines
-			StringTokenizer strtok = new StringTokenizer(lineOne, " ");
-			if(strtok.hasMoreTokens()) patternSize = Integer.parseInt(strtok.nextToken());
-			strtok = new StringTokenizer(lineTwo, " ");
-			if(strtok.hasMoreTokens()) numberOfPatterns = Integer.parseInt(strtok.nextToken());
 
+			// Tokinze first two lines
+			StringTokenizer strtok = new StringTokenizer(lineOne, " ");
+			if (strtok.hasMoreTokens())
+				patternSize = Integer.parseInt(strtok.nextToken());
+			strtok = new StringTokenizer(lineTwo, " ");
+			if (strtok.hasMoreTokens())
+				numberOfPatterns = Integer.parseInt(strtok.nextToken());
 
 			// Setup set
 			patternSet = new Pattern[numberOfPatterns];
-			
-			int countingPatternHeight = 0;
 			int currentPatternSize = 0;
 
-
 			// Begin reading samples
-			while((line = reader.readLine()) != null){
-				if(!line.isEmpty() && currentPatternSize != patternSize){
-					if(patternWidth == 0){
+			while ((line = reader.readLine()) != null) {
+				if (!line.isEmpty() && currentPatternSize != patternSize && Pattern.containsPattern(line)) {
+					if (patternWidth == 0) {
 						patternWidth = line.length();
-					} 
-					//Create pattern
-					currentPattern += line.substring(0, patternWidth);
+						patternHeight = patternSize / patternWidth;
+					}
+					// Create pattern
+					currentPattern += createEqualLine(line);
 					currentPatternSize += patternWidth;
-					countingPatternHeight++;
 				} else {
-					//Finished reading a pattern
-					if(!currentPattern.isEmpty()){
-						//Check pattern height
-						if(patternHeight == 0){
-							patternHeight = countingPatternHeight;
-						} else {
-							//Verify all patterns have the same height
-							if(countingPatternHeight != patternHeight){
-								System.out.println("Error pattern has a height of:" + countingPatternHeight+
-								" but patterns have a height of " + patternHeight);
-							}
-						}
-						countingPatternHeight = 0;
+					// Finished reading a pattern
+					if (!currentPattern.isEmpty()) {
+						
+						currentPattern = fillPattern(currentPattern);
 
-						//Create pattern
+						// Create pattern
 						patternSet[patternIndex] = new Pattern(currentPattern, patternWidth, patternHeight);
 						currentPattern = "";
 						patternIndex++;
@@ -116,11 +98,15 @@ public class PatternSet {
 			System.out.println("Error parsing file. " + e);
 			return false;
 		}
-		patternSet[patternIndex] = new Pattern(currentPattern, patternWidth, patternHeight);
+		if (!currentPattern.isEmpty())
+			patternSet[patternIndex] = new Pattern(currentPattern, patternWidth, patternHeight);
 
-		for(int i = 0; i < patternSet.length; i++){
+		System.out.println("--- Patterns ---");
+		for (int i = 0; i < patternSet.length; i++) {
 			System.out.println(patternSet[i].toString());
 		}
+		System.out.println();
+		initializeWeights();
 		return true;
 	}
 
@@ -129,33 +115,51 @@ public class PatternSet {
 	 */
 	private void initializeWeights() {
 
-		weights = new float[patternSize][patternSize];
+		weights = new int[patternSize][patternSize];
 		boolean successfulWeightInitialization = true;
 
-		for(int i = 0; i < patternSize; i++){
-			for(int j = 0; j < patternSize; j++){
+		for (int i = 0; i < patternSize; i++) {
+			for (int j = 0; j < patternSize; j++) {
 				weights[i][j] = 0;
 			}
 		}
 
 	}
 
-	public void setWeights(float [][] newWeights){
+	/*
+	 * setWeights - Sets weights of the net with an array
+	 * 
+	 * @param newWeights New weights for the net
+	 */
+	public void setWeights(int[][] newWeights) {
 		this.weights = newWeights;
 	}
 
-	public int getPatternSize(){
+	/*
+	 * getPatternSize
+	 * 
+	 * @return Returns the size of the pattern
+	 */
+	public int getPatternSize() {
 		return patternSize;
 	}
 
-	public Pattern getPattern(int patternIndex){
+	/*
+	 * getPattern - Returns the pattern at the index
+	 * 
+	 * @param patternIndex Index of the pattern to return
+	 */
+	public Pattern getPattern(int patternIndex) {
 		return patternSet[patternIndex];
 	}
 
 	/*
 	 * setWeightsFromFile - Initializes the weights from file
+	 * 
 	 * @param weightsFile The file to initialize the weights from
-	 * @return Returns a boolean indicating successful loading of weights or unsuccessful loading
+	 * 
+	 * @return Returns a boolean indicating successful loading of weights or
+	 * unsuccessful loading
 	 */
 	public boolean setWeightsFromFile(String weightsFile) {
 		// Initialize weights from file
@@ -167,18 +171,22 @@ public class PatternSet {
 			int patternWidth = Integer.parseInt(reader.readLine().trim());
 			int patternHeight = Integer.parseInt(reader.readLine().trim());
 
-			if(weights == null){
-				weights = new float[patternSize][patternSize];
+			if (patternSize != this.patternSize) {
+				System.out.println("Mismatch pattern sizes.");
+				return false;
 			}
-			
-			//Begin reading weights
+			if (weights == null) {
+				weights = new int[patternSize][patternSize];
+			}
+
+			// Begin reading weights
 			int rowIndex = 0;
 			int columnIndex = 0;
 			while ((line = reader.readLine()) != null) {
-				//Parse line of weights
+				// Parse line of weights
 				StringTokenizer st = new StringTokenizer(line, " ");
-				while(st.hasMoreTokens()){
-					weights[columnIndex][rowIndex] = Float.parseFloat(st.nextToken());
+				while (st.hasMoreTokens()) {
+					weights[columnIndex][rowIndex] = Integer.parseInt(st.nextToken());
 					columnIndex++;
 				}
 				columnIndex = 0;
@@ -192,11 +200,16 @@ public class PatternSet {
 		return true;
 	}
 
-	public String weightsToString(){
+	/*
+	 * weightsToString - Returns the weights as a string
+	 * 
+	 * @return Returns the weights as a string
+	 */
+	public String weightsToString() {
 		String strweights = "";
 		strweights += patternSize + "\n" + patternWidth + "\n" + patternHeight + "\n";
-		for(int i = 0; i < patternSize; i++){
-			for(int j = 0; j < patternSize; j++){
+		for (int i = 0; i < patternSize; i++) {
+			for (int j = 0; j < patternSize; j++) {
 				strweights += String.format("%8s", weights[j][i] + " ");
 			}
 			strweights += "\n";
@@ -205,42 +218,86 @@ public class PatternSet {
 		return strweights;
 	}
 
-	public void weightsToFile(String filename){
+	/*
+	 * weightsToFile - writes the weights to file
+	 * 
+	 * @param filename Name of the file to write to
+	 */
+	public void weightsToFile(String filename) {
 		BufferedWriter writer = null;
 		try {
-			writer = new BufferedWriter(new FileWriter(filename));
+			writer = new BufferedWriter(new FileWriter((filename)));
 			writer.write(weightsToString());
 			writer.close();
-			
-			System.out.println("\nSaved weights from training to: " + filename + "\n");
-			
+
 		} catch (Exception e) {
 			System.out.println("Error printing weights to file. " + e);
 		}
 	}
-	
+
+	/*
+	 * patternsToFile - writes the patterns to file
+	 * 
+	 * @param filename The name of the file to write to
+	 */
 	public void patternsToFile(String filename) {
 		BufferedWriter writer = null;
 		try {
 			writer = new BufferedWriter(new FileWriter(filename));
-			for(int pattern = 0; pattern < numberOfPatterns; pattern++) {
+			for (int pattern = 0; pattern < numberOfPatterns; pattern++) {
 				writer.write(patternSet[pattern].toString());
 				writer.newLine();
 			}
 			writer.close();
-			
+
 			System.out.println("\nSaved patterns from set to: " + filename + "\n");
-			
+
 		} catch (Exception e) {
 			System.out.println("Error printing patterns to file. " + e);
 		}
 	}
 
-	public float[][] getWeights(){
+	/*
+	 * getWeights - Returns the weights as an array
+	 * 
+	 * @return A 2d array of the weights
+	 */
+	public int[][] getWeights() {
 		return weights;
 	}
 
-	public int getNumberOfPatterns(){
+	/*
+	 * getNumberOfPatterns - Returns the number of patterns in the net
+	 * 
+	 * @return Int representing the number of patterns
+	 */
+	public int getNumberOfPatterns() {
 		return numberOfPatterns;
+	}
+	
+	private String createEqualLine(String line) {
+		if(line.length() < patternWidth) {
+			while(line.length() < patternSize){
+				line += " ";
+			}
+			return line;
+		} else if(line.length() > patternWidth) {
+			return line.substring(0, patternWidth);
+		} else {
+			return line;
+		}
+	}
+	
+	private String fillPattern(String pattern) {
+		if(pattern.length() < patternSize) {
+			while(pattern.length() < patternSize) {
+				pattern += " ";
+			}
+			return pattern;
+		} else if(pattern.length() > patternSize) {
+			return pattern.substring(0, patternSize);
+		} else {
+			return pattern;
+		}
 	}
 }
