@@ -42,6 +42,8 @@ public class Hopfield {
 			int[][] outer = outerproduct(trainingData.getPattern(j));
 			add(trainingData.getWeights(), outer);
 		}
+		
+		setNoSelfConnections(trainingData.getWeights());
 
 		// Get weights file
 		System.out.print("Enter the weights file:");
@@ -96,9 +98,9 @@ public class Hopfield {
 	 * @param index The index of i
 	 */
 	public int compute(Pattern pattern, int index) {
-		int y = 0;
-		for (int j = 0; j < testingData.getNumberOfPatterns(); j++) {
-			y += testingData.getWeights()[index][j] * pattern.valueAt(j);
+		int y = pattern.valueAt(index);
+		for (int j = 0; j < testingData.getPatternSize(); j++) {
+			y += testingData.getWeights()[j][index] * pattern.valueAt(j);
 		}
 
 		if (y > 0.0f) {
@@ -188,5 +190,14 @@ public class Hopfield {
 			randomSequence[i] = nextSequence;
 		}
 		return randomSequence;
+	}
+	
+	/*
+	 * Sets no self connections
+	 */
+	private void setNoSelfConnections(int [][] weights) {
+		for(int i = 0; i < weights.length; i++) {
+			weights[i][i] = 0;
+		}
 	}
 }
